@@ -1,3 +1,5 @@
+import { ResultSetHeader, RowDataPacket } from "mysql2"
+
 export interface User {
     id: string
     username: string,
@@ -12,4 +14,11 @@ export interface userSignUp{
 export interface userSignIn{
     username: string,
     password: string
+}
+
+export interface UserFromMysql extends  ResultSetHeader {
+    id: string
+    username: string,
+    password: string,
+    email: string
 }

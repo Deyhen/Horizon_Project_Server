@@ -13,4 +13,5 @@ usersRouter.post('/users/registration',registrationValidationSchema, usersContro
 usersRouter.post('/users/logout', usersController.logout)
 usersRouter.get('/users', usersController.getUsers)
 usersRouter.get('/users/user', usersController.getUser)
+usersRouter.delete('/users/user', usersController.deleteUser)
 

@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors"
 import * as dotenv from 'dotenv'
 import session from 'express-session'
-import mysql from 'mysql'
+import mysql from 'mysql2/promise'
 import {usersRouter} from "./Routes/usersRouter" 
 
 
@@ -27,24 +27,18 @@ app.use(
   })
 );
 
-export const db = mysql.createConnection({
+ const mysqlConfig = {
   host: process.env.MYSQL_HOST,
   user: process.env.MYSQL_LOGIN,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DB_NAME, 
   insecureAuth : true,
 
-});
+}
 
-// Connect to MySQL
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to MySQL: ' + err.stack); 
-    return;
-  }
-  console.log('Connected to MySQL as ID ' + db.threadId);
-});
-// Routes
+ export const connection  =  mysql.createPool(mysqlConfig);
+
+
 
 
 app.use(express.json())
@@ -54,3 +48,9 @@ app.use('/api',cors(corsOptions), usersRouter)
 app.post('/')
 
 app.listen(process.env.PORT, () => console.log('server is working'));
+
+
+// connection.query("INSERT INTO users (id, username, password, 2f, email) VALUES (?, ?, ?, ?, ?)" , ['3', 'test3', 'test1233', '0', 'test3@test.com']) 
+// const d = await connection.query('SELECT * FROM users ');
+
+// console.log(d);
