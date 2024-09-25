@@ -14,6 +14,6 @@ usersRouter.post('/logout', usersController.logout)
 usersRouter.get('/users', usersController.getUsers)
 usersRouter.get('/users/user', authMiddleware, usersController.getUser)
 usersRouter.get('/activate/:link', usersController.activate)
-usersRouter.get('/refresh')
+usersRouter.get('/refresh', usersController.refresh)
 // usersRouter.delete('/users/user/delete', usersController.deleteUser)
   

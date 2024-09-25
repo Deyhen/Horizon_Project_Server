@@ -35,7 +35,7 @@ class UsersService{
         const tokens = tokensService.generateTokens({id: createdUser.id, role: createdUser.role});
         await tokensService.saveToken({userId: createdUser.id, refreshToken: tokens.refreshToken});
 
-        return {...tokens, createdUser}
+        return tokens
     }
     async login(username: string, password: string){
         const user = (await connection.query('SELECT * from users WHERE username = ?', [username]))[0][0];
@@ -51,7 +51,7 @@ class UsersService{
         const tokens = tokensService.generateTokens({id: user.id, role: user.role});
         await tokensService.saveToken({userId: user.id, refreshToken: tokens.refreshToken});
 
-        return {...tokens, user}
+        return tokens
 
     }
     async logout(refreshToken: string){
@@ -79,7 +79,7 @@ class UsersService{
         const tokens = tokensService.generateTokens({id: user.id, role: user.role});
         await tokensService.saveToken({userId: user.id, refreshToken: tokens.refreshToken});
 
-        return {...tokens, user}
+        return tokens
 
     }
 }

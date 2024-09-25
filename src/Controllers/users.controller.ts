@@ -28,11 +28,11 @@ class UsersController{
             const data = matchedData(req)
 
             const {username, email, password} = data;
-            const userData = await userService.registration(email, username, password)
+            const tokenData = await userService.registration(email, username, password)
 
-            res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true, path: `${process.env.BACKEND_URL}/api/refresh`})
+            res.cookie('refreshToken', tokenData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true, path: `${process.env.BACKEND_URL}/api/refresh`})
             
-            return res.status(200).json(userData)
+            return res.status(200).json(tokenData.accessToken)
         } catch (error) {
             next(error)
 
@@ -47,11 +47,11 @@ class UsersController{
             } 
             const data = matchedData(req);
 
-            const userData = await userService.login(data.username, data.password)
+            const tokenData = await userService.login(data.username, data.password)
 
-            res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true})
+            res.cookie('refreshToken', tokenData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true})
             
-            return res.status(200).json(userData)
+            return res.status(200).json(tokenData.accessToken)
         } catch (error) {
             next(error)
         }
@@ -73,7 +73,7 @@ class UsersController{
             const activationLink = req.params.link
             await userService.activate(activationLink);
 
-            return res.redirect(process.env.FRONTEND_URL || 'localhost://3000')
+            return res.redirect('https://rt.pornhub.com/gayporn')
         } catch (error) {
             next(error)
         }
@@ -82,11 +82,11 @@ class UsersController{
         try {
             const {refreshToken} = req.cookies
 
-            const userData = await userService.refresh(refreshToken)
+            const tokenData = await userService.refresh(refreshToken)
 
-            res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true})
+            res.cookie('refreshToken', tokenData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true})
             
-            return res.status(200).json(userData)
+            return res.status(200).json(tokenData.accessToken)
         } catch (error) {
             next(error)
         }
