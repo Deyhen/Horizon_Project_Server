@@ -7,30 +7,39 @@ import { checkSchema } from "express-validator"
         errorMessage: 'invalid password',
         isLength: {
             options: { min: 3 },
-            errorMessage: 'Password should be at least 8 chars',
+            errorMessage: 'Password should be at least 3 chars',
           },
           matches: {
             options: [/^[a-zA-Z0-9 .,'!&]+$/],
             errorMessage: 'Use banned symbols'
           }
     },
+    username: {
+
+      isString: true,
+      notEmpty: true,
+      errorMessage: 'invalid username',
+      matches: {
+          options: [/^[a-zA-Z0-9 .,'!&]+$/],
+          errorMessage: 'Use banned symbols'
+        }
+  },
     email: {
         isString: true,
         isEmail: true,
         notEmpty: true,
         errorMessage: 'invalid email',
         matches: {
-            options: [/^[a-zA-Z0-9 .,'!&]+$/],
+            options: [/^[a-zA-Z0-9-.@]+$/],
             errorMessage: 'Use banned symbols'
           }
     },
 })
 const loginValidationSchema = checkSchema({
-    email: {
-        isEmail: true,
+    username: {
         isString: true,
         notEmpty: true,
-        errorMessage: 'invalid email',
+        errorMessage: 'invalid username',
         matches: {
             options: [/^[a-zA-Z0-9 .,'!&]+$/],
             errorMessage: 'Use banned symbols'
