@@ -28,7 +28,7 @@ cd project-directory</code></pre>
             <ul>
                 <li>Create a MySQL database and user.</li>
                 <li>Run the provided SQL scripts to set up the necessary tables.</li>
-                <li>Configure the MySQL connection details in the <code>.env</code> file:
+                <li>Configure the details in the <code>.env</code> file:
                     <pre><code>DB_HOST=&lt;your_db_host&gt;
 <br>PORT=&lt;your_back_port&gt;
 <br>BACKEND_URL=&lt;your_back_url&gt;
