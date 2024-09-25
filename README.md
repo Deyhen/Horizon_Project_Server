@@ -21,6 +21,7 @@
         <li>Nodemailer</li>
         <li>Mysql2</li>
         <li>Express-validator</li>
+        <li>TypeScript</li>
     </ul>
     <h2>Installation and Setup</h2>
     <ol>
