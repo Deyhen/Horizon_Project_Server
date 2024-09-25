@@ -54,7 +54,7 @@ cd project-directory</code></pre>
             </ul>
         </li>
         <li>Start the development server:
-            <pre><code>npm start</code></pre>
+            <pre><code>npm run dev</code></pre>
         </li>
     </ol>
     <h2>Contributions</h2>
