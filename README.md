@@ -15,6 +15,13 @@
         <li><strong>MySQL Integration:</strong> Utilizes MySQL for persisting user data, tokens, and other relevant information.</li>
         <li><strong>Token Management:</strong> Manages access and refresh tokens efficiently within the database.</li>
     </ul>
+    <h2>Tech in use</h2>
+    <ul>
+        <li>Node js/Express js</li>
+        <li>Nodemailer</li>
+        <li>Mysql2</li>
+        <li>Express-validator</li>
+    </ul>
     <h2>Installation and Setup</h2>
     <ol>
         <li>Clone the repository:
@@ -26,8 +33,8 @@ cd project-directory</code></pre>
         </li>
         <li>Set up the MySQL database:
             <ul>
-                <li>Create a MySQL database and user.</li>
-                <li>Run the provided SQL scripts to set up the necessary tables.</li>
+                <li>Create a MySQL database with nessesary tables and columns.</li>
+                <li>Configure Google and Gmail settings.</li>
                 <li>Configure the details in the <code>.env</code> file:
                     <pre><code>DB_HOST=&lt;your_db_host&gt;
 <br>PORT=&lt;your_back_port&gt;
