@@ -68,16 +68,18 @@ class UsersService{
         if(!refreshToken){
             throw ApiError.UnauthorizedError();
         }
-
         const userData = await tokensService.validateRefreshToken(refreshToken);
         const tokenData = await tokensService.findRefreshToken(refreshToken);
 
-        if(!userData || !tokenData){
-            throw ApiError.UnauthorizedError()
+        if(!userData || !tokenData){ 
+            throw ApiError.UnauthorizedError() 
         }
+
         const user = (await connection.query('SELECT * from users WHERE id = ?', [userData.id]))[0][0];
         const tokens = tokensService.generateTokens({id: user.id, role: user.role});
+
         await tokensService.saveToken({userId: user.id, refreshToken: tokens.refreshToken});
+
 
         return tokens
 

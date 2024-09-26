@@ -14,7 +14,7 @@ class TokensService{
     generateTokens({id, role}: {id: string, role: string}){
         try {
             const payload = {id, role}
-            const accessToken = jwt.sign(payload, AccessTokenKey as string, {expiresIn: "30m"})
+            const accessToken = jwt.sign(payload, AccessTokenKey as string, {expiresIn: "15m"})
             const refreshToken = jwt.sign(payload, RefreshTokenKey as string, {expiresIn: "30d"})
             return{
                 accessToken,
@@ -29,13 +29,21 @@ class TokensService{
     //this way results in only one active device
     async saveToken({userId, refreshToken}: {userId: string, refreshToken: string}){
         try {
-            const tokenData = (await connection.query<RefreshToken>('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0] 
+            
+            const tokenData = (await connection.query<RefreshToken>('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0][0]
+     
             if(tokenData){
+
                 await connection.query('UPDATE refreshSessions SET refreshToken = ? WHERE userId = ?', [refreshToken, userId])
+                const newToken = (await connection.query('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0][0]
+   
+                return newToken
             }
+
             const id = v4()
             await connection.query('INSERT INTO refreshSessions (id, userId, refreshToken) VALUES (?, ?, ?)', [id, userId, refreshToken])
-            const token = (await connection.query('SELECT * FROM refreshSessions WHERE id = ?', [id]))[0]
+            const token = (await connection.query('SELECT * FROM refreshSessions WHERE id = ?', [id]))[0][0]
+
             return token
         } catch (error) {
             console.log(error);
@@ -55,12 +63,13 @@ class TokensService{
     async validateRefreshToken(refreshToken: string){
         try {
             const userData = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH || '') as UserFromToken
-            return userData as UserFromToken
+            return userData as UserFromToken 
         } catch (error) {
             return null
         }
     }
     async findRefreshToken(refreshToken: string){
+
         const tokenData = (await connection.query('SELECT * FROM refreshSessions WHERE refreshToken = ?', [refreshToken]))[0][0]
         return tokenData
     }

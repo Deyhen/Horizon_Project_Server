@@ -59,10 +59,8 @@ class UsersController{
     async logout(req: Request, res: Response, next: NextFunction){
         try {
             const {refreshToken} = req.cookies
-
             await userService.logout(refreshToken)
             res.clearCookie('refreshToken')
-
             res.status(200)
         } catch (error) {
             next(error)
@@ -73,7 +71,7 @@ class UsersController{
             const activationLink = req.params.link
             await userService.activate(activationLink);
 
-            return res.redirect('https://rt.pornhub.com/gayporn')
+            return res.redirect(process.env.FRONTEND_URL || '')
         } catch (error) {
             next(error)
         }
@@ -83,13 +81,11 @@ class UsersController{
             const {refreshToken} = req.cookies
 
             const tokenData = await userService.refresh(refreshToken)
-
-            res.cookie('refreshToken', tokenData.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true})
-            
+            res.cookie('refreshToken', tokenData.refreshToken, {maxAge: 30 * 24 *60 * 60 * 1000})
             return res.status(200).json(tokenData.accessToken)
         } catch (error) {
             next(error)
-        }
+        } 
     }
 }
 
