@@ -1,8 +1,10 @@
-export class ApiError extends Error{
-    status;
-    errors;
+import { ValidationError } from "express-validator";
 
-    constructor(status, message, errors = []){
+export class ApiError extends Error{
+    status: number;
+    errors: ValidationError[];
+
+    constructor(status: number, message: string, errors: ValidationError[] = []){
         super(message);
         this.status = status;
         this.errors = errors
@@ -11,7 +13,7 @@ export class ApiError extends Error{
     static UnauthorizedError(){
         return new ApiError(401, 'Користувач не авторизований')
     }
-    static BadRequest(message, errors?){
+    static BadRequest(message: string, errors?: ValidationError[]){
         return new ApiError(400, message, errors)
     }
 }

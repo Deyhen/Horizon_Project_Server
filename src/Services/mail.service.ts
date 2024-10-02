@@ -1,5 +1,6 @@
 import nodemailer, { Transporter } from 'nodemailer'
 import * as dotenv from "dotenv"
+import jwt from 'jsonwebtoken'
 
 dotenv.config()
 
@@ -16,7 +17,10 @@ class MailService{
         });
     }
 
-     sendActivationMail({to, link}: {to: string, link: string}){
+     sendActivationMail({to, username}: {to: string, username: string}){
+        
+        const activationLink = jwt.sign({email: to}, process.env.JWT_SECRET_EMAIL as string, {expiresIn: '15m'})
+
         this.transporter.sendMail({
             from: process.env.SMTP_USE,
             to,
@@ -26,7 +30,7 @@ class MailService{
                 `
                     <div>
                         <h1>Для активація перейдіть по посиланню:</h1>
-                        <a href=${link}>${link}</a>
+                        <a href=${process.env.BACKEND_URL}/api/activate/${activationLink + " " + username}>${activationLink}</a>
                     </div>
 
                 `

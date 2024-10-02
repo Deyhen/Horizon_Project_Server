@@ -1,9 +1,9 @@
 import jwt, { JwtPayload } from "jsonwebtoken"
 import * as dotenv from 'dotenv'
 import { connection } from ".."
-import { RefreshToken } from "../Models/token.module"
+import { RefreshToken } from "../Models/token.model"
 import {v4} from 'uuid'
-import { UserFromToken } from "../Models/user.module"
+import { UserFromToken } from "../Models/user.model"
 
 dotenv.config()
 
@@ -30,19 +30,19 @@ class TokensService{
     async saveToken({userId, refreshToken}: {userId: string, refreshToken: string}){
         try {
             
-            const tokenData = (await connection.query<RefreshToken>('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0][0]
+            const tokenData = (await connection.query<RefreshToken>('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0]
      
             if(tokenData){
 
                 await connection.query('UPDATE refreshSessions SET refreshToken = ? WHERE userId = ?', [refreshToken, userId])
-                const newToken = (await connection.query('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0][0]
+                const newToken = (await connection.query('SELECT * FROM refreshSessions WHERE userId = ?', [userId]))[0]
    
                 return newToken
             }
 
             const id = v4()
             await connection.query('INSERT INTO refreshSessions (id, userId, refreshToken) VALUES (?, ?, ?)', [id, userId, refreshToken])
-            const token = (await connection.query('SELECT * FROM refreshSessions WHERE id = ?', [id]))[0][0]
+            const token = (await connection.query('SELECT * FROM refreshSessions WHERE id = ?', [id]))[0]
 
             return token
         } catch (error) {
@@ -70,7 +70,7 @@ class TokensService{
     }
     async findRefreshToken(refreshToken: string){
 
-        const tokenData = (await connection.query('SELECT * FROM refreshSessions WHERE refreshToken = ?', [refreshToken]))[0][0]
+        const tokenData = (await connection.query('SELECT * FROM refreshSessions WHERE refreshToken = ?', [refreshToken]))[0]
         return tokenData
     }
 }

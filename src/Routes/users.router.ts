@@ -8,7 +8,7 @@ export const usersRouter = Router()
 
 
 
-usersRouter.post('/login', loginValidationSchema,usersController.login)
+usersRouter.post('/login', loginValidationSchema, usersController.login)
 usersRouter.post('/registration',registrationValidationSchema, usersController.registration)
 usersRouter.post('/logout', usersController.logout)
 usersRouter.get('/users', usersController.getUsers)

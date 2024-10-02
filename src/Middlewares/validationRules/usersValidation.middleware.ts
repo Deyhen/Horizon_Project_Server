@@ -10,7 +10,7 @@ import { checkSchema } from "express-validator"
             errorMessage: 'Password should be at least 3 chars',
           },
           matches: {
-            options: [/^[a-zA-Z0-9 .,'!&]+$/],
+            options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}_-]+$/gu],
             errorMessage: 'Use banned symbols'
           }
     },
@@ -20,7 +20,7 @@ import { checkSchema } from "express-validator"
       notEmpty: true,
       errorMessage: 'invalid username',
       matches: {
-          options: [/^[a-zA-Z0-9 .,'!&]+$/],
+          options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}_-]+$/gu],
           errorMessage: 'Use banned symbols'
         }
   },
@@ -30,7 +30,7 @@ import { checkSchema } from "express-validator"
         notEmpty: true,
         errorMessage: 'invalid email',
         matches: {
-            options: [/^[a-zA-Z0-9-.@]+$/],
+            options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}@._-]+$/gu],
             errorMessage: 'Use banned symbols'
           }
     },
@@ -41,7 +41,7 @@ const loginValidationSchema = checkSchema({
         notEmpty: true,
         errorMessage: 'invalid username',
         matches: {
-            options: [/^[a-zA-Z0-9 .,'!&]+$/],
+            options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}_-]+$/gu],
             errorMessage: 'Use banned symbols'
           }
     },
@@ -50,7 +50,7 @@ const loginValidationSchema = checkSchema({
         notEmpty: true,
         errorMessage: 'invalid password',
         matches: {
-            options: [/^[a-zA-Z0-9 .,'!&]+$/],
+            options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}_-]+$/gu],
             errorMessage: 'Use banned symbols'
           }
     },

@@ -3,45 +3,44 @@ import bcrypt from 'bcrypt'
 import {v4} from 'uuid'
 import mailService from "./mail.service"
 import tokensService from "./tokens.service"
-import { UserFromToken, UserSchema } from "../Models/user.module"
+import { UserFromToken, UserSchema } from "../Models/user.model"
 import { ApiError } from "../exceptions/api.error"
+import userDto from "../dto/user.dto"
 
 class UsersService{
     async getUsers(){
-        const users = (await connection.query('SELECT * FROM users'))[0][0]
+        const users = (await connection.query<UserSchema[]>('SELECT * FROM users'))[0][0]
 
         return users
     }
     async findUser(user: UserFromToken){
        
-        const foundUser = (await connection.query('SELECT * FROM users WHERE ID = ?', [user.id]))[0][0]
+        const foundUser = (await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [user.id]))[0][0]
         return foundUser
     }
     async registration (email: string, password: string, username: string){
-        const selectResults = (await connection.query('SELECT * from users WHERE email = ?', [email]))[0][0];
-        
-        if(selectResults){
-            throw ApiError.BadRequest('Email already exist');
-        }
+        await this.chekUserExist({email: email, username: username})
+
+        mailService.sendActivationMail({to: email, username: username});
 
         const id = v4();
         const hashedPassword = bcrypt.hashSync(password, 7);
         await connection.query("INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)" , [`${id}`, `${username}`, `${hashedPassword}`, `${email}`]) ;
 
-        const createdUser = (await connection.query<UserSchema>('SELECT * FROM users WHERE USERNAME = ?', [`${username}`]))[0][0];
-
-        mailService.sendActivationMail({to: email, link: `${process.env.BACKEND_URL}/api/activate/${id}`});
+        const userSQL = (await connection.query<UserSchema[]>('SELECT * FROM users WHERE USERNAME = ?', [`${username}`]))[0][0]
+        const createdUser = new userDto(userSQL)
 
         const tokens = tokensService.generateTokens({id: createdUser.id, role: createdUser.role});
         await tokensService.saveToken({userId: createdUser.id, refreshToken: tokens.refreshToken});
 
-        return tokens
+        return {tokens, createdUser}
     }
     async login(username: string, password: string){
-        const user = (await connection.query('SELECT * from users WHERE username = ?', [username]))[0][0];
-        if(!user){
+        const userSQL = (await connection.query<UserSchema[]>('SELECT * from users WHERE username = ?', [username]))[0][0]; 
+        if(!userSQL){
             throw ApiError.BadRequest('User is undefined');
         }
+        const user = new userDto(userSQL as UserSchema)
 
         const isPassEqual = bcrypt.compareSync(password, user.password);
         if(!isPassEqual){
@@ -51,18 +50,25 @@ class UsersService{
         const tokens = tokensService.generateTokens({id: user.id, role: user.role});
         await tokensService.saveToken({userId: user.id, refreshToken: tokens.refreshToken});
 
-        return tokens
+        return {tokens, user}
 
     }
     async logout(refreshToken: string){
         tokensService.removeRefreshToken(refreshToken);
+
+        return
     }
     async activate(activationLink: string){
-        const selectResults = (await connection.query('SELECT * from users WHERE id = ?', [activationLink]))[0][0];
+        const username = activationLink.split(' ')[1]
+        console.log(username);
+        
+        const selectResults = (await connection.query<UserSchema[]>('SELECT * from users WHERE username = ?', [username]))[0][0];
+        console.log(selectResults);
         if(!selectResults){
             throw ApiError.BadRequest('Incorrect activation link');
         }
-        connection.query('UPDATE users SET isActivated = true');
+
+        connection.query('UPDATE users SET isActivated = true WHERE username = ?', [username]);
     }
     async refresh(refreshToken: string){
         if(!refreshToken){
@@ -75,14 +81,27 @@ class UsersService{
             throw ApiError.UnauthorizedError() 
         }
 
-        const user = (await connection.query('SELECT * from users WHERE id = ?', [userData.id]))[0][0];
+        const userSQL = (await connection.query<UserSchema[]>('SELECT * from users WHERE id = ?', [userData.id]))[0][0];
+        const user = new userDto(userSQL as UserSchema)
         const tokens = tokensService.generateTokens({id: user.id, role: user.role});
 
         await tokensService.saveToken({userId: user.id, refreshToken: tokens.refreshToken});
 
 
-        return tokens
-
+        return {tokens,user}
+    }
+    async chekUserExist ({email, username}: {email: string, username: string}) {
+        console.log(username);
+        console.log(email);
+        const emailExist = (await connection.query<UserSchema[]>('SELECT * from users WHERE email = ?', [email]))[0][0]
+        const usernameExist = (await connection.query<UserSchema[]>('SELECT * from users WHERE username = ?', [username]))[0][0]
+        console.log(usernameExist);
+        if(emailExist){
+            throw ApiError.BadRequest('Email already exist');
+        } else if(usernameExist){
+            throw ApiError.BadRequest('Username already exist');
+        }
+        return
     }
 }
 export default new UsersService() 
