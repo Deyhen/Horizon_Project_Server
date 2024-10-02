@@ -11,6 +11,16 @@ class NewsController{
             next()
         }
     }
+    async findNews(req: Request, res: Response, next: NextFunction){
+        try {
+            const id = req.params.id
+            const news = await newsService.findNews(id)
+
+            res.status(200).json(news)
+        } catch (error) {
+            next()
+        }
+    }
 }
 
 export default new NewsController()

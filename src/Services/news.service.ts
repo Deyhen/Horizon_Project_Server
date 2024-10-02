@@ -8,5 +8,10 @@ class NewsService{
 
         return res
     }
+    async findNews(id: string){
+        const res = (await connection.query('SELECT * FROM news WHERE id = ?', [id]))[0];
+
+        return res
+    }
 }
 export default new NewsService()

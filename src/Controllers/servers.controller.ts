@@ -11,6 +11,16 @@ class ServersController{
             next()
         }
     }
+    async findServer(req: Request, res: Response, next: NextFunction){
+        try {
+            const server = req.params.server
+            const foundServer = await serversService.findServer(server)
+
+            res.status(200).json(foundServer)
+        } catch (error) {
+            next()
+        }
+    }
 }
 
 export default new ServersController()
