@@ -6,10 +6,14 @@ import mysql from 'mysql2/promise'
 import {usersRouter} from "./Routes/users.router" 
 import cookieParser  from "cookie-parser";
 import ErrorsMiddleware from './Middlewares/errors.middleware'
+import { postsRouter } from "./Routes/posts.router";
+import { serversRouter } from "./Routes/servers.router";
+import multer from "multer";
 
 
 
 dotenv.config()
+
 
 const memoryStore = new session.MemoryStore();
 
@@ -41,20 +45,14 @@ app.use(
  export const connection  =  mysql.createPool(mysqlConfig);
 
 
-
+app.use(express.static('static'))
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use('/api',cors(corsOptions), usersRouter)
 app.use(ErrorsMiddleware)
+
+app.use('/api',cors(corsOptions), usersRouter, postsRouter, serversRouter)
 
 app.post('/')
 
 app.listen(process.env.PORT, () => console.log('server is working'));
-
-
-
-// connection.query("INSERT INTO users (id, username, password, 2f, email) VALUES (?, ?, ?, ?, ?)" , ['3', 'test3', 'test1233', '0', 'test3@test.com']) 
-// const d = await connection.query('SELECT * FROM users ');
-
-// console.log(d);

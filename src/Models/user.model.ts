@@ -8,7 +8,9 @@ export interface UserSchema extends  ResultSetHeader {
     email: string,
     twoFa: boolean,
     isActivated: boolean,
-    role: string
+    role: string,
+    gameCurrency: number,
+    donateCurrency: number
 }
 export interface UserFromToken{
     id: string,

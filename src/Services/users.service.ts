@@ -6,6 +6,7 @@ import tokensService from "./tokens.service"
 import { UserFromToken, UserSchema } from "../Models/user.model"
 import { ApiError } from "../exceptions/api.error"
 import userDto from "../dto/user.dto"
+import jwt, { JwtPayload } from "jsonwebtoken"
 
 class UsersService{
     async getUsers(){
@@ -59,16 +60,15 @@ class UsersService{
         return
     }
     async activate(activationLink: string){
-        const username = activationLink.split(' ')[1]
-        console.log(username);
+        const email = (jwt.decode(activationLink) as JwtPayload).email
         
-        const selectResults = (await connection.query<UserSchema[]>('SELECT * from users WHERE username = ?', [username]))[0][0];
-        console.log(selectResults);
+        const selectResults = (await connection.query<UserSchema[]>('SELECT * from users WHERE email = ?', [email]))[0][0];
+
         if(!selectResults){
             throw ApiError.BadRequest('Incorrect activation link');
         }
 
-        connection.query('UPDATE users SET isActivated = true WHERE username = ?', [username]);
+        connection.query('UPDATE users SET isActivated = true WHERE email = ?', [email]);
     }
     async refresh(refreshToken: string){
         if(!refreshToken){
@@ -91,11 +91,8 @@ class UsersService{
         return {tokens,user}
     }
     async chekUserExist ({email, username}: {email: string, username: string}) {
-        console.log(username);
-        console.log(email);
         const emailExist = (await connection.query<UserSchema[]>('SELECT * from users WHERE email = ?', [email]))[0][0]
         const usernameExist = (await connection.query<UserSchema[]>('SELECT * from users WHERE username = ?', [username]))[0][0]
-        console.log(usernameExist);
         if(emailExist){
             throw ApiError.BadRequest('Email already exist');
         } else if(usernameExist){
