@@ -3,6 +3,7 @@ import { connection } from ".."
 import { Post } from "../Models/posts.model";
 import { v4 } from "uuid";
 import fs from "fs"
+import path from "path";
 
 class PostsService{
     async getPosts(){
@@ -22,8 +23,8 @@ class PostsService{
     } 
     async deletePost(id: string){
         const {img} = (await connection.query<Post[]>('SELECT img FROM news WHERE id = ?', [id]))[0][0];
-
-        fs.unlink(img, (err) => {
+        const filePath = path.join(process.cwd(), 'static', img);
+        fs.unlink(filePath, (err) => {
             if (err) {
               console.error(`Error removing file: ${err}`);
               return;

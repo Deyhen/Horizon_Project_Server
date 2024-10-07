@@ -7,6 +7,9 @@ import { UserFromToken, UserSchema } from "../Models/user.model"
 import { ApiError } from "../exceptions/api.error"
 import userDto from "../dto/user.dto"
 import jwt, { JwtPayload } from "jsonwebtoken"
+import fs from "fs"
+import { ResultSetHeader } from "mysql2"
+import path from "path"
 
 class UsersService{
     async getUsers(){
@@ -99,6 +102,68 @@ class UsersService{
             throw ApiError.BadRequest('Username already exist');
         }
         return
+    }
+    async forgotPassword(email: string){
+        const token = bcrypt.hashSync(email, 7);
+        const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    
+        const [result] = await connection.query("UPDATE users SET resetPasswordToken = ?, resetPasswordExpires = ? WHERE email = ?", [token, expires, email]);
+    
+        if ((result as any).affectedRows === 0) {
+            throw ApiError.BadRequest('Username already exist');
+        }
+        mailService.sendPasswordResetLink(email, token)
+
+        return
+    }
+    async resetPassword(token: string, newPassword: string){
+        const user = (await connection.query<UserSchema[]>("SELECT * FROM users WHERE resetPasswordToken = ? AND resetPasswordExpires > ?", [token, new Date()]))[0][0];
+        if (!user) {
+            throw ApiError.BadRequest("Invalid or expired token.");
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 7);
+
+        await connection.query("UPDATE users SET password = ?, resetPasswordToken = NULL, resetPasswordExpires = NULL WHERE id = ?", [hashedPassword, user.id]);
+
+        return user.username
+    }
+    async chekResetToken(token: string){
+        const user = (await connection.query<UserSchema[]>("SELECT * FROM users WHERE resetPasswordToken = ? AND resetPasswordExpires > ?", [token, new Date()]))[0][0];
+        if(!user){
+            throw ApiError.BadRequest('Invalid reset token')
+        } ;
+
+        return user.resetPasswordToken
+    }
+    async changeSkin(skinPath: string, id: string){
+        const oldUser = (await connection.execute<UserSchema[]>('SELECT * FROM users WHERE id = ?', [id]))[0][0]
+        const filePath = path.join(process.cwd(), 'static', oldUser.skinPath);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+              console.error(`Error removing file: ${err}`);
+              return;
+            }})
+        await connection.query('UPDATE users SET skinPath = ? WHERE id = ?', [skinPath, id]);
+        const updatedUser = (await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [id]))[0][0]
+        const user = new userDto(updatedUser as UserSchema)
+        return user
+        
+    }
+    async changeAvatar(avatarPath: string, id: string){
+        const oldUser = (await connection.execute<UserSchema[]>('SELECT * FROM users WHERE id = ?', [id]))[0][0]
+        const filePath = path.join(process.cwd(), 'static', oldUser.skinPath);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+              console.error(`Error removing file: ${err}`);
+              return;
+            }})
+        await connection.query('UPDATE users SET avatarPath = ? WHERE id = ?', [avatarPath, id]);
+        const updatedUser = (await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [id]))[0][0]
+        const user = new userDto(updatedUser as UserSchema)
+        return user
+        
     }
 }
 export default new UsersService() 

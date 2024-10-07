@@ -14,6 +14,7 @@ export class ApiError extends Error{
         return new ApiError(401, 'Користувач не авторизований')
     }
     static BadRequest(message: string, errors?: ValidationError[]){
+
         return new ApiError(400, message, errors)
     }
 }

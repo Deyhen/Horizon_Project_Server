@@ -91,6 +91,74 @@ class UsersController{
             next(error)
         } 
     }
+    async forgotPassword (req:Request, res:Response, next: NextFunction){    
+        try {
+            const { email } = req.body;
+            
+            await userService.forgotPassword(email)
+
+            res.status(200)
+        } catch (error) {
+            next(error)
+        }  
+    }
+    async resetPassword (req:Request, res:Response, next: NextFunction){
+        try {
+            const { token, password } = req.body;
+
+            const username = await userService.resetPassword(token, password)
+            const userData = await userService.login(username, password)
+
+            res.cookie('refreshToken', userData.tokens.refreshToken, {maxAge: 30 * 24 *60 * 60 *  1000, httpOnly: true, path: `${process.env.BACKEND_URL}/api/refresh`})
+            
+            res.status(200).json({accessToken: userData.tokens.accessToken, user: userData.user})
+        } catch (error) {
+            next(error)
+        }
+        }
+        async checkResetToken (req:Request, res:Response, next: NextFunction){
+            try {
+                const token = req.params.token;
+    
+                const checkedToken = await userService.chekResetToken(token)
+
+                res.status(200).json(checkedToken)
+            } catch (error) {
+                next(error)
+            }
+        }
+        async changeSkin(req:Request, res:Response, next: NextFunction){
+            try {
+                const {id} = req.body
+
+                if (!req.file) {
+                    return res.status(400).json({ success: false, message: 'Invalid data' });
+                  }
+                const skinPath = `/skins/${req.file.filename}`; 
+
+                const updatedUser = await userService.changeSkin( skinPath, id)
+
+                res.status(200).json(updatedUser);
+            } catch (error) {
+                next(error)
+            }
+        }
+        async changeAvatar(req:Request, res:Response, next: NextFunction){
+            try {
+                const {id} = req.body
+
+                if (!req.file) {
+                    return res.status(400).json({ success: false, message: 'Invalid data' });
+                  }
+                const avatarPath = `/avatars/${req.file.filename}`; 
+                
+                const updatedUser = await userService.changeAvatar( avatarPath, id)
+
+                res.status(200).json(updatedUser);
+            } catch (error) {
+                next(error)
+            }
+        }
 }
 
 export default new UsersController()

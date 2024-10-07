@@ -8,7 +8,7 @@ class PostsController{
 
             res.status(200).json(posts)
         } catch (error) {
-            next()
+            next(error)
         }
     }
     async findPost(req: Request, res: Response, next: NextFunction){
@@ -17,7 +17,7 @@ class PostsController{
             const posts = await postsService.findPost(id)
             res.status(200).json(posts)
         } catch (error) {
-            next()
+            next(error)
         }
     }
     async deletePost(req: Request, res: Response, next: NextFunction){
@@ -26,24 +26,23 @@ class PostsController{
             const posts = await postsService.deletePost(id)
             res.status(200).json(posts)
         } catch (error) {
-            next()
+            next(error)
         }
     }
     async createPost(req: Request, res: Response, next: NextFunction){
         try {
-            const { title, content } = req.body;  // Username sent with the request
+            const { title, content } = req.body;  
 
             if (!title || !content || !req.file) {
               return res.status(400).json({ success: false, message: 'Invalid data' });
             }
-            const imagePath = `/postsImages/${req.file.filename}`;  // Path to the uploaded file
+            const imagePath = `/postsImages/${req.file.filename}`;  
 
             const posts = await postsService.createPost( title, content, imagePath)
 
-            console.log(posts);
-        
             res.status(200).json(posts);
           } catch (error) {
+            next(error)
             console.error('Error uploading avatar:', error);
             res.status(500).json({ success: false, message: 'Server error' });
           }

@@ -8,7 +8,7 @@ class ServersController{
 
             res.status(200).json(servers)
         } catch (error) {
-            next()
+            next(error)
         }
     }
     async findServer(req: Request, res: Response, next: NextFunction){
@@ -18,7 +18,7 @@ class ServersController{
 
             res.status(200).json(foundServer)
         } catch (error) {
-            next()
+            next(error)
         }
     }
 }

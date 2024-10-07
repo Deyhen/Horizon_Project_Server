@@ -10,7 +10,12 @@ export interface UserSchema extends  ResultSetHeader {
     isActivated: boolean,
     role: string,
     gameCurrency: number,
-    donateCurrency: number
+    donateCurrency: number,
+    resetPasswordToken: string,
+    resetPasswordExpires: Date
+    skinPath: string;
+    capePath: string;
+    avatarPath: string
 }
 export interface UserFromToken{
     id: string,

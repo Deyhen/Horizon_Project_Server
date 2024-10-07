@@ -10,6 +10,13 @@ class userResponseDataDto{
         email: string;
         isActivated: boolean;
         role: string;
+    } = {
+        id: '',
+        username: '',
+        password: '',
+        email: '',
+        isActivated: false,
+        role: '',
     }
     constructor(model: {accessToken: string, user:userDto}){
         this.accessToken = model.accessToken;
