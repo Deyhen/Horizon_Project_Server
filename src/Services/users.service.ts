@@ -1,19 +1,15 @@
 import { connection } from '..'
 import bcrypt from 'bcrypt'
-import { v4 } from 'uuid'
 import mailService from './mail.service'
-import tokensService from './tokens.service'
 import {
   PromocodeSchema,
-  UserFromToken,
   UserSchema,
 } from '../Models/user.model'
 import { ApiError } from '../exceptions/api.error'
-import userDto from '../dto/user.dto'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import fs from 'fs'
-
 import path from 'path'
+import tokensService from './tokens.service'
 
 class UsersService {
   async getUsers() {
@@ -23,79 +19,20 @@ class UsersService {
 
     return users
   }
-  async findUser(user: UserFromToken) {
+  async findUser(token: string) {
+    const id = await tokensService.getIdByToken(token)
+
+    if (!id) {
+      throw new Error('Invalid token or ID not found');
+    }
     const foundUser = (
-      await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [
-        user.id,
+      await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
+        id,
       ])
     )[0][0]
     return foundUser
   }
-  async registration(email: string, password: string, username: string) {
-    await this.chekUserExist({ email: email, username: username })
-
-    mailService.sendActivationMail({ to: email, username: username })
-
-    const id = v4()
-    const hashedPassword = bcrypt.hashSync(password, 7)
-
-    await connection.query(
-      'INSERT INTO users (id, username, password, email) VALUES (?, ?, ?, ?)',
-      [id, username, hashedPassword, email]
-    )
-    const userSQL = (
-      await connection.query<UserSchema[]>(
-        'SELECT * FROM users WHERE username = ?',
-        [username]
-      )
-    )[0][0]
-    const createdUser = new userDto(userSQL)
-
-    const tokens = tokensService.generateTokens({
-      id: createdUser.id,
-      role: createdUser.role,
-    })
-    await tokensService.saveToken({
-      userId: createdUser.id,
-      refreshToken: tokens.refreshToken,
-    })
-
-    return { tokens, createdUser }
-  }
-  async login(username: string, password: string) {
-    const userSQL = (
-      await connection.query<UserSchema[]>(
-        'SELECT * from users WHERE username = ?',
-        [username]
-      )
-    )[0][0]
-    if (!userSQL) {
-      throw ApiError.BadRequest('User is undefined')
-    }
-    const user = new userDto(userSQL as UserSchema)
-
-    const isPassEqual = bcrypt.compareSync(password, user.password)
-    if (!isPassEqual) {
-      throw ApiError.BadRequest('Incorrect password')
-    }
-
-    const tokens = tokensService.generateTokens({
-      id: user.id,
-      role: user.role,
-    })
-    await tokensService.saveToken({
-      userId: user.id,
-      refreshToken: tokens.refreshToken,
-    })
-
-    return { tokens, user }
-  }
-  async logout(refreshToken: string) {
-    tokensService.removeRefreshToken(refreshToken)
-
-    return
-  }
-  async activate(activationLink: string) {
+  async activate(activationLink: string) { 
     const email = (jwt.decode(activationLink) as JwtPayload).email
 
     const selectResults = (
@@ -112,61 +49,6 @@ class UsersService {
     connection.query('UPDATE users SET isActivated = true WHERE email = ?', [
       email,
     ])
-  }
-  async refresh(refreshToken: string) {
-    if (!refreshToken) {
-      throw ApiError.UnauthorizedError()
-    }
-    const userData = await tokensService.validateRefreshToken(refreshToken)
-    const tokenData = await tokensService.findRefreshToken(refreshToken)
-
-    if (!userData || !tokenData) {
-      throw ApiError.UnauthorizedError()
-    }
-
-    const userSQL = (
-      await connection.query<UserSchema[]>('SELECT * from users WHERE id = ?', [
-        userData.id,
-      ])
-    )[0][0]
-    const user = new userDto(userSQL as UserSchema)
-    const tokens = tokensService.generateTokens({
-      id: user.id,
-      role: user.role,
-    })
-
-    await tokensService.saveToken({
-      userId: user.id,
-      refreshToken: tokens.refreshToken,
-    })
-
-    return { tokens, user }
-  }
-  async chekUserExist({
-    email,
-    username,
-  }: {
-    email: string
-    username: string
-  }) {
-    const emailExist = (
-      await connection.query<UserSchema[]>(
-        'SELECT * from users WHERE email = ?',
-        [email]
-      )
-    )[0][0]
-    const usernameExist = (
-      await connection.query<UserSchema[]>(
-        'SELECT * from users WHERE username = ?',
-        [username]
-      )
-    )[0][0]
-    if (emailExist) {
-      throw ApiError.BadRequest('Email already exist')
-    } else if (usernameExist) {
-      throw ApiError.BadRequest('Username already exist')
-    }
-    return
   }
   async forgotPassword(email: string) {
     const token = bcrypt.hashSync(email, 7)
@@ -218,7 +100,9 @@ class UsersService {
 
     return user.resetPasswordToken
   }
-  async changeSkin(skinPath: string, id: string) {
+  async changeSkin(skinPath: string, token: string) {
+    const id = await tokensService.getIdByToken(token)
+
     const oldUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
@@ -226,11 +110,13 @@ class UsersService {
     )[0][0]
     if (oldUser.skinPath) {
       const filePath = path.join(process.cwd(), 'static', oldUser.skinPath)
+
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error(`Error removing file: ${err}`)
           return
         }
+
       })
     }
 
@@ -238,47 +124,48 @@ class UsersService {
       skinPath,
       id,
     ])
-    const updatedUser = (
-      await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [
-        id,
-      ])
-    )[0][0]
-    const user = new userDto(updatedUser as UserSchema)
-    return user
+
+    return 
   }
-  async changeAvatar(avatarPath: string, id: string) {
+  async changeAvatar(avatarPath: string, token: string) {
+    const id = await tokensService.getIdByToken(token)
+
     const oldUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
       ])
     )[0][0]
+
     if (oldUser.avatarPath) {
-      const filePath = path.join(process.cwd(), 'static', oldUser.skinPath)
+      const filePath = path.join(process.cwd(), 'static', oldUser.avatarPath)
+
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error(`Error removing file: ${err}`)
           return
         }
+
       })
     }
+
     await connection.query('UPDATE users SET avatarPath = ? WHERE id = ?', [
       avatarPath,
       id,
     ])
-    const updatedUser = (
-      await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [
-        id,
-      ])
-    )[0][0]
-    const user = new userDto(updatedUser as UserSchema)
-    return user
+    
+    return 
   }
-  async changeCape(capePath: string, id: string) {
+
+
+  async changeCape(capePath: string, token: string) {
+    const id = await tokensService.getIdByToken(token)
+
     const oldUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
       ])
     )[0][0]
+
     if (oldUser.capePath) {
       const filePath = path.join(process.cwd(), 'static', oldUser.capePath)
       fs.unlink(filePath, (err) => {
@@ -292,19 +179,12 @@ class UsersService {
       capePath,
       id,
     ])
-    const updatedUser = (
-      await connection.query<UserSchema[]>('SELECT * FROM users WHERE ID = ?', [
-        id,
-      ])
-    )[0][0]
-    const user = new userDto(updatedUser as UserSchema)
-    return user
+
+    return 
   }
   async activateEmail(token: string) {
-    const { id } = jwt.verify(
-      token,
-      process.env.JWT_SECRET_ACCESS!
-    ) as JwtPayload
+    const id = await tokensService.getIdByToken(token)
+
     const user = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
@@ -315,27 +195,29 @@ class UsersService {
     return
   }
   async activatePromocode(promocode: string, token: string) {
-    const { id } = jwt.verify(
-      token,
-      process.env.JWT_SECRET_ACCESS!
-    ) as JwtPayload
+    const id =  await tokensService.getIdByToken(token)
+
     if (!id) {
       throw ApiError.UnauthorizedError()
     }
+
     const oldUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
       ])
     )[0][0]
+
     const promocodeData = (
       await connection.query<PromocodeSchema[]>(
         'SELECT * FROM promocodes WHERE name = ?',
         [promocode]
       )
     )[0][0]
+
     if (!promocodeData) {
       throw ApiError.BadRequest('Promocode does not exist')
     }
+
     await connection.query(
       'UPDATE users SET donateCurrency = ?, gameCurrency = ? WHERE id = ?',
       [
@@ -344,16 +226,34 @@ class UsersService {
         id,
       ]
     )
+
     await connection.query('DELETE FROM promocodes WHERE id = ?', [
       promocodeData.id,
     ])
-    const newUser = (
-      await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
-        id,
-      ])
-    )[0][0]
 
-    return newUser
+    return 
+  }
+  async changeUsername(newUsername: string, token: string,){
+    const id = await tokensService.getIdByToken(token)
+    console.log(id, newUsername);
+    await connection.query('UPDATE users SET username = ? WHERE id = ?', [newUsername, id])
+
+    return 
+  }
+  async changePassword(newPassword: string, currentPassword: string, token: string,){
+    const id = await tokensService.getIdByToken(token)
+    const user = (
+        await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
+            id,
+        ])
+      )[0][0]
+    const isPassEqual = bcrypt.compareSync(currentPassword, user.password)
+    if (!isPassEqual) {
+    throw ApiError.BadRequest('Incorrect password')
+    }
+    const hashedNewPassword = bcrypt.hashSync(newPassword, 7)
+    await connection.query('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, id])
+    return
   }
 }
 export default new UsersService()

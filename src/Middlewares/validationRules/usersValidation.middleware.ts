@@ -53,4 +53,26 @@ const loginValidationSchema = checkSchema({
     },
   },
 })
-export { loginValidationSchema, registrationValidationSchema }
+const changeUsernameValidationSchema = checkSchema({
+  username: {
+    isString: true,
+    notEmpty: true,
+    errorMessage: 'invalid username',
+    matches: {
+      options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}_-]+$/gu],
+      errorMessage: 'Use banned symbols',
+    },
+  },
+})
+const changePasswordValidationSchema = checkSchema({
+  password: {
+    isString: true,
+    notEmpty: true,
+    errorMessage: 'invalid password',
+    matches: {
+      options: [/^[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}_-]+$/gu],
+      errorMessage: 'Use banned symbols',
+    },
+  },
+})
+export { loginValidationSchema, registrationValidationSchema, changePasswordValidationSchema, changeUsernameValidationSchema }

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import userService from '../Services/users.service'
 import * as dotenv from 'dotenv'
-import { matchedData, validationResult } from 'express-validator'
+import authService from '../Services/auth.service'
 import { ApiError } from '../exceptions/api.error'
 
 dotenv.config()
@@ -13,73 +13,15 @@ class UsersController {
     res.status(200).json(users)
   }
   async getUser(req: Request, res: Response) {
-    const foundUser = await userService.findUser(req.body.user)
+    const token = req.headers.authorization?.split(' ')[1]
+
+        if (!token) {
+            throw ApiError.UnauthorizedError()
+        }
+
+    const foundUser = await userService.findUser(token)
 
     res.status(200).json(foundUser)
-  }
-  async registration(req: Request, res: Response, next: NextFunction) {
-    try {
-      const errors = validationResult(req)
-
-      if (!errors.isEmpty()) {
-        next(ApiError.BadRequest('Error in validation', errors.array()))
-      }
-      const data = matchedData(req)
-      const { username, email, password } = data
-      console.log(username, email, password)
-      const userData = await userService.registration(email, password, username)
-
-      res.cookie('refreshToken', userData.tokens.refreshToken, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        path: `${process.env.BACKEND_URL}/api/refresh`,
-      })
-
-      res.status(200).json({
-        accessToken: userData.tokens.accessToken,
-        user: userData.createdUser,
-      })
-    } catch (error) {
-      next(error)
-    }
-  }
-  async login(req: Request, res: Response, next: NextFunction) {
-    try {
-      const errors = validationResult(req)
-
-      if (!errors.isEmpty()) {
-        next(ApiError.BadRequest('Error in validation', errors.array()))
-      }
-      const data = matchedData(req)
-
-      const userData = await userService.login(data.username, data.password)
-
-      res.cookie('refreshToken', userData.tokens.refreshToken, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        path: `${process.env.BACKEND_URL}/api/refresh`,
-      })
-
-      res
-        .status(200)
-        .json({ accessToken: userData.tokens.accessToken, user: userData.user })
-    } catch (error) {
-      next(error)
-    }
-  }
-  async logout(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { refreshToken } = req.cookies
-      await userService.logout(refreshToken)
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        path: `${process.env.BACKEND_URL}/api/refresh`,
-      })
-      res.status(200).json('Logout is success').end()
-    } catch (error) {
-      console.log(error)
-      next(error)
-    }
   }
   async activate(req: Request, res: Response, next: NextFunction) {
     try {
@@ -92,27 +34,13 @@ class UsersController {
       next(error)
     }
   }
-  async refresh(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { refreshToken } = req.cookies
-
-      const userData = await userService.refresh(refreshToken)
-      res.cookie('refreshToken', userData.tokens.refreshToken, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        path: `${process.env.BACKEND_URL}/api/refresh`,
-      })
-
-      res
-        .status(200)
-        .json({ accessToken: userData.tokens.accessToken, user: userData.user })
-    } catch (error) {
-      next(error)
-    }
-  }
   async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body
+
+      if(!email){
+        throw ApiError.BadRequest('Invalid email')
+      }
 
       await userService.forgotPassword(email)
 
@@ -126,7 +54,7 @@ class UsersController {
       const { token, password } = req.body
 
       const username = await userService.resetPassword(token, password)
-      const userData = await userService.login(username, password)
+      const userData = await authService.login(username, password)
 
       res.cookie('refreshToken', userData.tokens.refreshToken, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
@@ -144,6 +72,9 @@ class UsersController {
   async checkResetToken(req: Request, res: Response, next: NextFunction) {
     try {
       const token = req.params.token
+      if(!token){
+        throw ApiError.UnauthorizedError()
+      }
 
       const checkedToken = await userService.chekResetToken(token)
 
@@ -154,48 +85,55 @@ class UsersController {
   }
   async changeSkin(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.body
 
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: 'Invalid data' })
-      }
+        const token = req.headers.authorization?.split(' ')[1]
+
+        if (!token) {
+            throw ApiError.UnauthorizedError()
+        }else if(!req.file){
+                throw ApiError.BadRequest('Invalid file')
+        }
       const skinPath = `/skins/${req.file.filename}`
 
-      const updatedUser = await userService.changeSkin(skinPath, id)
+      await userService.changeSkin(skinPath, token)
 
-      res.status(200).json(updatedUser)
+      res.status(200).json({message: 'Success'})
     } catch (error) {
       next(error)
     }
   }
   async changeAvatar(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.body
+        const token = req.headers.authorization?.split(' ')[1]
 
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: 'Invalid data' })
-      }
-      const avatarPath = `/avatars/${req.file.filename}`
+        if (!token) {
+            throw ApiError.UnauthorizedError()
+        }else if(!req.file){
+                throw ApiError.BadRequest('Invalid file')
+        }
+        const avatarPath = `/avatars/${req.file.filename}`
 
-      const updatedUser = await userService.changeAvatar(avatarPath, id)
+        await userService.changeAvatar(avatarPath, token)
 
-      res.status(200).json(updatedUser)
+        res.status(200).json({message: 'Success'})
     } catch (error) {
       next(error)
     }
   }
   async changeCape(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.body
+        const token = req.headers.authorization?.split(' ')[1]
 
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: 'Invalid data' })
-      }
+        if (!token) {
+            throw ApiError.UnauthorizedError()
+        }else if(!req.file){
+                throw ApiError.BadRequest('Invalid file')
+        }
 
       const capePath = `/capes/${req.file.filename}`
 
-      const updatedUser = await userService.changeCape(capePath, id)
-      res.status(200).json(updatedUser)
+      await userService.changeCape(capePath, token)
+      res.status(200).json({message: 'Success'})
     } catch (error) {
       next(error)
     }
@@ -205,12 +143,12 @@ class UsersController {
       const token = req.headers.authorization?.split(' ')[1]
 
       if (!token) {
-        return res.status(400).json({ success: false, message: 'Invalid data' })
+        throw ApiError.UnauthorizedError()
       }
 
       await userService.activateEmail(token)
 
-      res.status(200)
+      res.status(200).json({message: 'Success'})
     } catch (error) {
       next(error)
     }
@@ -220,16 +158,54 @@ class UsersController {
       const token = req.headers.authorization?.split(' ')[1]
       const { promocode } = req.params
 
-      if (!token || !promocode) {
-        return res.status(400).json({ success: false, message: 'Invalid data' })
+      if (!token) {
+        throw ApiError.UnauthorizedError()
+      }else if(!promocode){
+          throw ApiError.BadRequest('Invalid promocode')
       }
 
-      const user = await userService.activatePromocode(promocode, token)
+      await userService.activatePromocode(promocode, token)
 
-      res.status(200).json(user)
+      res.status(200).json({message: 'Success'})
     } catch (error) {
       next(error)
     }
+  }
+  async changeUsername(req: Request, res: Response, next: NextFunction){
+    try {
+        const token = req.headers.authorization?.split(' ')[1]
+        const {newUsername} = req.body
+
+        if (!token) {
+          throw ApiError.UnauthorizedError()
+        }else if(!newUsername){
+            throw ApiError.BadRequest('Invalid username')
+        }
+  
+        await userService.changeUsername(newUsername, token)
+  
+        res.status(200).json({message: 'Success'})
+      } catch (error) {
+        next(error)
+      }
+  }
+  async changePassword(req: Request, res: Response, next: NextFunction){
+    try {
+        const token = req.headers.authorization?.split(' ')[1]
+        const {newPassword, currentPassword} = req.body
+        
+        if (!token) {
+          throw ApiError.UnauthorizedError()
+        }else if(!newPassword || !currentPassword){
+            throw ApiError.BadRequest('Invalid password')
+        }
+  
+        await userService.changePassword(newPassword, currentPassword, token)
+  
+        res.status(200).json({message: 'Success'})
+      } catch (error) {
+        next(error)
+      }
   }
 }
 

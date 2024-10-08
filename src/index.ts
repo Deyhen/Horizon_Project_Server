@@ -3,12 +3,12 @@ import cors from 'cors'
 import * as dotenv from 'dotenv'
 import session from 'express-session'
 import mysql from 'mysql2/promise'
-
 import cookieParser from 'cookie-parser'
 import { postsRouter } from './Routes/posts.router'
 import { serversRouter } from './Routes/servers.router'
 import errorHandlerMiddleware from './Middlewares/errors.middleware'
 import { usersRouter } from './Routes/users.router.js'
+import { authRouter } from './Routes/auth.router'
 
 dotenv.config()
 
@@ -57,7 +57,7 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.use('/api', usersRouter, postsRouter, serversRouter)
+app.use('/api', usersRouter, postsRouter, serversRouter, authRouter)
 
 app.use(errorHandlerMiddleware)
 

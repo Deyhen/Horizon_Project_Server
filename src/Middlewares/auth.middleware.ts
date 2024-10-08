@@ -12,12 +12,10 @@ export default async function (
     if (!authorizationHeader) {
       return next(ApiError.UnauthorizedError())
     }
-
     const accessToken = authorizationHeader.split(' ')[1]
     if (!accessToken) {
       return next(ApiError.UnauthorizedError())
     }
-
     const userData = await tokensService.validateAccessToken(accessToken)
     if (!userData) {
       return next(ApiError.UnauthorizedError())

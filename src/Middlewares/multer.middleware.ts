@@ -1,5 +1,4 @@
 import multer from 'multer'
-
 const skinsStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'static/skins') // Directory to store avatars

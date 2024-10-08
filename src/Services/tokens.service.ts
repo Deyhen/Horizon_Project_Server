@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { connection } from '..'
 import { RefreshToken } from '../Models/token.model'
@@ -111,6 +111,14 @@ class TokensService {
       )
     )[0]
     return tokenData
+  }
+  async getIdByToken(token: string){
+    const { id } = jwt.verify(
+        token,
+        process.env.JWT_SECRET_ACCESS!
+      ) as JwtPayload
+
+      return id
   }
 }
 export default new TokensService()
