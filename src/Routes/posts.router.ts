@@ -17,9 +17,5 @@ export const postsRouter = Router()
 
 postsRouter.get('/posts', postsController.getPosts)
 postsRouter.get('/posts/:id', postsController.findPost)
-postsRouter.post(
-  '/posts',
-  uploadPosts.single('img'),
-  postsController.createPost
-)
+postsRouter.post('/posts',uploadPosts.single('img'),postsController.createPost)
 postsRouter.delete('/posts/:id', postsController.deletePost)

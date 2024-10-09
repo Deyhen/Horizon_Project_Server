@@ -1,10 +1,7 @@
 import { connection } from '..'
 import bcrypt from 'bcrypt'
 import mailService from './mail.service'
-import {
-  PromocodeSchema,
-  UserSchema,
-} from '../Models/user.model'
+import { UserSchema } from '../Models/user.model'
 import { ApiError } from '../exceptions/api.error'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import fs from 'fs'
@@ -23,7 +20,7 @@ class UsersService {
     const id = await tokensService.getIdByToken(token)
 
     if (!id) {
-      throw new Error('Invalid token or ID not found');
+      throw new Error('Invalid token or ID not found')
     }
     const foundUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
@@ -32,7 +29,7 @@ class UsersService {
     )[0][0]
     return foundUser
   }
-  async activate(activationLink: string) { 
+  async activate(activationLink: string) {
     const email = (jwt.decode(activationLink) as JwtPayload).email
 
     const selectResults = (
@@ -116,7 +113,6 @@ class UsersService {
           console.error(`Error removing file: ${err}`)
           return
         }
-
       })
     }
 
@@ -125,7 +121,7 @@ class UsersService {
       id,
     ])
 
-    return 
+    return
   }
   async changeAvatar(avatarPath: string, token: string) {
     const id = await tokensService.getIdByToken(token)
@@ -144,7 +140,6 @@ class UsersService {
           console.error(`Error removing file: ${err}`)
           return
         }
-
       })
     }
 
@@ -152,10 +147,9 @@ class UsersService {
       avatarPath,
       id,
     ])
-    
-    return 
-  }
 
+    return
+  }
 
   async changeCape(capePath: string, token: string) {
     const id = await tokensService.getIdByToken(token)
@@ -180,7 +174,7 @@ class UsersService {
       id,
     ])
 
-    return 
+    return
   }
   async activateEmail(token: string) {
     const id = await tokensService.getIdByToken(token)
@@ -194,65 +188,35 @@ class UsersService {
 
     return
   }
-  async activatePromocode(promocode: string, token: string) {
-    const id =  await tokensService.getIdByToken(token)
+  async changeUsername(newUsername: string, token: string) {
+    const id = await tokensService.getIdByToken(token)
+    await connection.query('UPDATE users SET username = ? WHERE id = ?', [
+      newUsername,
+      id,
+    ])
 
-    if (!id) {
-      throw ApiError.UnauthorizedError()
-    }
-
-    const oldUser = (
+    return
+  }
+  async changePassword(
+    newPassword: string,
+    currentPassword: string,
+    token: string
+  ) {
+    const id = await tokensService.getIdByToken(token)
+    const user = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
       ])
     )[0][0]
-
-    const promocodeData = (
-      await connection.query<PromocodeSchema[]>(
-        'SELECT * FROM promocodes WHERE name = ?',
-        [promocode]
-      )
-    )[0][0]
-
-    if (!promocodeData) {
-      throw ApiError.BadRequest('Promocode does not exist')
-    }
-
-    await connection.query(
-      'UPDATE users SET donateCurrency = ?, gameCurrency = ? WHERE id = ?',
-      [
-        oldUser.donateCurrency + promocodeData.bonusDonateCurrency,
-        oldUser.gameCurrency + promocodeData.bonusGameCurrency,
-        id,
-      ]
-    )
-
-    await connection.query('DELETE FROM promocodes WHERE id = ?', [
-      promocodeData.id,
-    ])
-
-    return 
-  }
-  async changeUsername(newUsername: string, token: string,){
-    const id = await tokensService.getIdByToken(token)
-    console.log(id, newUsername);
-    await connection.query('UPDATE users SET username = ? WHERE id = ?', [newUsername, id])
-
-    return 
-  }
-  async changePassword(newPassword: string, currentPassword: string, token: string,){
-    const id = await tokensService.getIdByToken(token)
-    const user = (
-        await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
-            id,
-        ])
-      )[0][0]
     const isPassEqual = bcrypt.compareSync(currentPassword, user.password)
     if (!isPassEqual) {
-    throw ApiError.BadRequest('Incorrect password')
+      throw ApiError.BadRequest('Incorrect password')
     }
     const hashedNewPassword = bcrypt.hashSync(newPassword, 7)
-    await connection.query('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, id])
+    await connection.query('UPDATE users SET password = ? WHERE id = ?', [
+      hashedNewPassword,
+      id,
+    ])
     return
   }
 }

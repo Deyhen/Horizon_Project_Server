@@ -75,4 +75,9 @@ const changePasswordValidationSchema = checkSchema({
     },
   },
 })
-export { loginValidationSchema, registrationValidationSchema, changePasswordValidationSchema, changeUsernameValidationSchema }
+export {
+  loginValidationSchema,
+  registrationValidationSchema,
+  changePasswordValidationSchema,
+  changeUsernameValidationSchema,
+}

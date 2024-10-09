@@ -9,6 +9,7 @@ import { serversRouter } from './Routes/servers.router'
 import errorHandlerMiddleware from './Middlewares/errors.middleware'
 import { usersRouter } from './Routes/users.router.js'
 import { authRouter } from './Routes/auth.router'
+import { promocodesRouter } from './Routes/promocodes.router'
 
 dotenv.config()
 
@@ -57,7 +58,7 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.use('/api', usersRouter, postsRouter, serversRouter, authRouter)
+app.use('/api', usersRouter, postsRouter, serversRouter, authRouter, promocodesRouter)
 
 app.use(errorHandlerMiddleware)
 

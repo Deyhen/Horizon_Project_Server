@@ -112,13 +112,13 @@ class TokensService {
     )[0]
     return tokenData
   }
-  async getIdByToken(token: string){
+  async getIdByToken(token: string) {
     const { id } = jwt.verify(
-        token,
-        process.env.JWT_SECRET_ACCESS!
-      ) as JwtPayload
+      token,
+      process.env.JWT_SECRET_ACCESS!
+    ) as JwtPayload
 
-      return id
+    return id
   }
 }
 export default new TokensService()

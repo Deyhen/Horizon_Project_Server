@@ -15,6 +15,7 @@ export interface UserSchema extends ResultSetHeader {
   skinPath: string
   capePath: string
   avatarPath: string
+  activatedPromocodes:  string[]
 }
 export interface UserFromToken {
   id: string

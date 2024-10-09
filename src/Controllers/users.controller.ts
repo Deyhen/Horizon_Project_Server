@@ -15,9 +15,9 @@ class UsersController {
   async getUser(req: Request, res: Response) {
     const token = req.headers.authorization?.split(' ')[1]
 
-        if (!token) {
-            throw ApiError.UnauthorizedError()
-        }
+    if (!token) {
+      throw ApiError.UnauthorizedError()
+    }
 
     const foundUser = await userService.findUser(token)
 
@@ -38,7 +38,7 @@ class UsersController {
     try {
       const { email } = req.body
 
-      if(!email){
+      if (!email) {
         throw ApiError.BadRequest('Invalid email')
       }
 
@@ -72,7 +72,7 @@ class UsersController {
   async checkResetToken(req: Request, res: Response, next: NextFunction) {
     try {
       const token = req.params.token
-      if(!token){
+      if (!token) {
         throw ApiError.UnauthorizedError()
       }
 
@@ -85,55 +85,54 @@ class UsersController {
   }
   async changeSkin(req: Request, res: Response, next: NextFunction) {
     try {
+      const token = req.headers.authorization?.split(' ')[1]
 
-        const token = req.headers.authorization?.split(' ')[1]
-
-        if (!token) {
-            throw ApiError.UnauthorizedError()
-        }else if(!req.file){
-                throw ApiError.BadRequest('Invalid file')
-        }
+      if (!token) {
+        throw ApiError.UnauthorizedError()
+      } else if (!req.file) {
+        throw ApiError.BadRequest('Invalid file')
+      }
       const skinPath = `/skins/${req.file.filename}`
 
       await userService.changeSkin(skinPath, token)
 
-      res.status(200).json({message: 'Success'})
+      res.status(200).json({ message: 'Success' })
     } catch (error) {
       next(error)
     }
   }
   async changeAvatar(req: Request, res: Response, next: NextFunction) {
     try {
-        const token = req.headers.authorization?.split(' ')[1]
+      const token = req.headers.authorization?.split(' ')[1]
 
-        if (!token) {
-            throw ApiError.UnauthorizedError()
-        }else if(!req.file){
-                throw ApiError.BadRequest('Invalid file')
-        }
-        const avatarPath = `/avatars/${req.file.filename}`
+      if (!token) {
+        throw ApiError.UnauthorizedError()
+      } else if (!req.file) {
+        throw ApiError.BadRequest('Invalid file')
+      }
+      const avatarPath = `/avatars/${req.file.filename}`
 
-        await userService.changeAvatar(avatarPath, token)
+      await userService.changeAvatar(avatarPath, token)
 
-        res.status(200).json({message: 'Success'})
+      res.status(200).json({ message: 'Success' })
     } catch (error) {
       next(error)
     }
   }
   async changeCape(req: Request, res: Response, next: NextFunction) {
     try {
-        const token = req.headers.authorization?.split(' ')[1]
+      const token = req.headers.authorization?.split(' ')[1]
 
-        if (!token) {
-            throw ApiError.UnauthorizedError()
-        }else if(!req.file){
-                throw ApiError.BadRequest('Invalid file')
-        }
+      if (!token) {
+        throw ApiError.UnauthorizedError()
+      } else if (!req.file) {
+        throw ApiError.BadRequest('Invalid file')
+      }
 
       const capePath = `/capes/${req.file.filename}`
 
       await userService.changeCape(capePath, token)
-      res.status(200).json({message: 'Success'})
+      res.status(200).json({ message: 'Success' })
     } catch (error) {
       next(error)
     }
@@ -148,64 +147,46 @@ class UsersController {
 
       await userService.activateEmail(token)
 
-      res.status(200).json({message: 'Success'})
+      res.status(200).json({ message: 'Success' })
     } catch (error) {
       next(error)
     }
   }
-  async activatePromocode(req: Request, res: Response, next: NextFunction) {
+  async changeUsername(req: Request, res: Response, next: NextFunction) {
     try {
       const token = req.headers.authorization?.split(' ')[1]
-      const { promocode } = req.params
+      const { newUsername } = req.body
 
       if (!token) {
         throw ApiError.UnauthorizedError()
-      }else if(!promocode){
-          throw ApiError.BadRequest('Invalid promocode')
+      } else if (!newUsername) {
+        throw ApiError.BadRequest('Invalid username')
       }
 
-      await userService.activatePromocode(promocode, token)
+      await userService.changeUsername(newUsername, token)
 
-      res.status(200).json({message: 'Success'})
+      res.status(200).json({ message: 'Success' })
     } catch (error) {
       next(error)
     }
   }
-  async changeUsername(req: Request, res: Response, next: NextFunction){
+  async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
-        const token = req.headers.authorization?.split(' ')[1]
-        const {newUsername} = req.body
+      const token = req.headers.authorization?.split(' ')[1]
+      const { newPassword, currentPassword } = req.body
 
-        if (!token) {
-          throw ApiError.UnauthorizedError()
-        }else if(!newUsername){
-            throw ApiError.BadRequest('Invalid username')
-        }
-  
-        await userService.changeUsername(newUsername, token)
-  
-        res.status(200).json({message: 'Success'})
-      } catch (error) {
-        next(error)
+      if (!token) {
+        throw ApiError.UnauthorizedError()
+      } else if (!newPassword || !currentPassword) {
+        throw ApiError.BadRequest('Invalid password')
       }
-  }
-  async changePassword(req: Request, res: Response, next: NextFunction){
-    try {
-        const token = req.headers.authorization?.split(' ')[1]
-        const {newPassword, currentPassword} = req.body
-        
-        if (!token) {
-          throw ApiError.UnauthorizedError()
-        }else if(!newPassword || !currentPassword){
-            throw ApiError.BadRequest('Invalid password')
-        }
-  
-        await userService.changePassword(newPassword, currentPassword, token)
-  
-        res.status(200).json({message: 'Success'})
-      } catch (error) {
-        next(error)
-      }
+
+      await userService.changePassword(newPassword, currentPassword, token)
+
+      res.status(200).json({ message: 'Success' })
+    } catch (error) {
+      next(error)
+    }
   }
 }
 

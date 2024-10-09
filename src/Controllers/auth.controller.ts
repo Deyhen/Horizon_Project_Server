@@ -4,29 +4,29 @@ import { NextFunction, Request, Response } from 'express'
 import authService from '../Services/auth.service'
 
 class AuthController {
-    async registration(req: Request, res: Response, next: NextFunction) {
+  async registration(req: Request, res: Response, next: NextFunction) {
     try {
-        const errors = validationResult(req)
+      const errors = validationResult(req)
 
-        if (!errors.isEmpty()) {
-            next(ApiError.BadRequest('Error in validation', errors.array()))
-        }
-        const data = matchedData(req)
+      if (!errors.isEmpty()) {
+        next(ApiError.BadRequest('Error in validation', errors.array()))
+      }
+      const data = matchedData(req)
 
-        const { username, email, password } = data
+      const { username, email, password } = data
 
-        const userData = await authService.registration(email, password, username)
+      const userData = await authService.registration(email, password, username)
 
-        res.cookie('refreshToken', userData.tokens.refreshToken, {
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-            httpOnly: true,
-            path: `${process.env.BACKEND_URL}/api/refresh`,
-        })
+      res.cookie('refreshToken', userData.tokens.refreshToken, {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        path: `${process.env.BACKEND_URL}/api/refresh`,
+      })
 
-        res.status(200).json({
-            accessToken: userData.tokens.accessToken,
-            user: userData.createdUser,
-        })
+      res.status(200).json({
+        accessToken: userData.tokens.accessToken,
+        user: userData.createdUser,
+      })
     } catch (error) {
       next(error)
     }
