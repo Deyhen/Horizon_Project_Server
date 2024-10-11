@@ -37,15 +37,14 @@ class TokensService {
     userId: string
     refreshToken: string
   }) {
-      console.log(1);
+
       const tokenData = (
         await connection.query<RefreshToken[]>(
           'SELECT * FROM refreshSessions WHERE userId = ?',
           [userId]
         )
       )[0][0]
-      console.log(4);
-      console.log(tokenData);
+
       if (tokenData) {
         await connection.query(
           'UPDATE refreshSessions SET refreshToken = ? WHERE userId = ?',
@@ -60,7 +59,7 @@ class TokensService {
         
         return newToken
       }
-      console.log(3);
+
       const id = v4()
       await connection.query(
         'INSERT INTO refreshSessions (id, userId, refreshToken) VALUES (?, ?, ?)',
@@ -71,7 +70,7 @@ class TokensService {
           id,
         ])
       )[0]
-      console.log(2);
+
       return token
   }
   async removeRefreshToken(refreshToken: string) {

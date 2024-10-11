@@ -124,7 +124,6 @@ class UsersController {
   }
   async changeCape(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log(1);
       const token = req.headers.authorization?.split(' ')[1]
 
       if (!token) {

@@ -19,7 +19,7 @@ class PromocodesService {
 
         user.activatedPromocodes.map(item => {
             const parsedItem = JSON.parse(item)
-            console.log(parsedItem, promocode);
+
             if(parsedItem.name === promocode){
                 throw ApiError.BadRequest('Ви вже використовували цей промокод')
             }

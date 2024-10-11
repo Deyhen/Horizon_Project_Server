@@ -154,13 +154,13 @@ class UsersService {
 
   async changeCape(capePath: string, token: string) {
     const id = await tokensService.getIdByToken(token)
-    console.log(1);
+
     const oldUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
       ])
     )[0][0]
-    console.log(2);
+
     if (oldUser.capePath) {
       const filePath = path.join(process.cwd(), 'static', oldUser.capePath)
       fs.unlink(filePath, (err) => {
