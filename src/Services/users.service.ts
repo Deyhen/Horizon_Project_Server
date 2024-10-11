@@ -40,7 +40,7 @@ class UsersService {
     )[0][0]
 
     if (!selectResults) {
-      throw ApiError.BadRequest('Incorrect activation link')
+      throw ApiError.BadRequest('Некоректне посилання')
     }
 
     connection.query('UPDATE users SET isActivated = true WHERE email = ?', [
@@ -48,7 +48,7 @@ class UsersService {
     ])
   }
   async forgotPassword(email: string) {
-    const token = bcrypt.hashSync(email, 7)
+    const token = bcrypt.hashSync(email, 7).replace(/\//g, '_')
     const expires = new Date(Date.now() + 3600000) // 1 hour
 
     const [result] = await connection.query(
@@ -58,7 +58,7 @@ class UsersService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((result as any).affectedRows === 0) {
-      throw ApiError.BadRequest('Username already exist')
+      throw ApiError.BadRequest('Логін вже існує')
     }
     mailService.sendPasswordResetLink(email, token)
 
@@ -71,8 +71,9 @@ class UsersService {
         [token, new Date()]
       )
     )[0][0]
+
     if (!user) {
-      throw ApiError.BadRequest('Invalid or expired token.')
+      throw ApiError.BadRequest('Посилання некоректне або строк його дії вийшов')
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 7)
@@ -92,7 +93,7 @@ class UsersService {
       )
     )[0][0]
     if (!user) {
-      throw ApiError.BadRequest('Invalid reset token')
+      throw ApiError.BadRequest('Некоректне посилання')
     }
 
     return user.resetPasswordToken
@@ -153,13 +154,13 @@ class UsersService {
 
   async changeCape(capePath: string, token: string) {
     const id = await tokensService.getIdByToken(token)
-
+    console.log(1);
     const oldUser = (
       await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
         id,
       ])
     )[0][0]
-
+    console.log(2);
     if (oldUser.capePath) {
       const filePath = path.join(process.cwd(), 'static', oldUser.capePath)
       fs.unlink(filePath, (err) => {
@@ -190,6 +191,18 @@ class UsersService {
   }
   async changeUsername(newUsername: string, token: string) {
     const id = await tokensService.getIdByToken(token)
+
+    const usernameExist = (
+      await connection.query<UserSchema[]>(
+        'SELECT * from users WHERE username = ?',
+        [newUsername]
+      )
+    )[0][0]
+
+    if (usernameExist) {
+      throw ApiError.BadRequest('Логін вже існує')
+    }
+
     await connection.query('UPDATE users SET username = ? WHERE id = ?', [
       newUsername,
       id,
@@ -210,7 +223,7 @@ class UsersService {
     )[0][0]
     const isPassEqual = bcrypt.compareSync(currentPassword, user.password)
     if (!isPassEqual) {
-      throw ApiError.BadRequest('Incorrect password')
+      throw ApiError.BadRequest('Новий і старий пароль не співпадають')
     }
     const hashedNewPassword = bcrypt.hashSync(newPassword, 7)
     await connection.query('UPDATE users SET password = ? WHERE id = ?', [

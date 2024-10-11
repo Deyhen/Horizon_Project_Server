@@ -14,7 +14,7 @@ class UsersController {
   }
   async getUser(req: Request, res: Response) {
     const token = req.headers.authorization?.split(' ')[1]
-
+    
     if (!token) {
       throw ApiError.UnauthorizedError()
     }
@@ -39,7 +39,7 @@ class UsersController {
       const { email } = req.body
 
       if (!email) {
-        throw ApiError.BadRequest('Invalid email')
+        throw ApiError.BadRequest('Некоректний email')
       }
 
       await userService.forgotPassword(email)
@@ -53,6 +53,7 @@ class UsersController {
     try {
       const { token, password } = req.body
 
+
       const username = await userService.resetPassword(token, password)
       const userData = await authService.login(username, password)
 
@@ -61,7 +62,7 @@ class UsersController {
         httpOnly: true,
         path: `${process.env.BACKEND_URL}/api/refresh`,
       })
-
+      
       res
         .status(200)
         .json({ accessToken: userData.tokens.accessToken, user: userData.user })
@@ -71,11 +72,13 @@ class UsersController {
   }
   async checkResetToken(req: Request, res: Response, next: NextFunction) {
     try {
+
       const token = req.params.token
+
       if (!token) {
         throw ApiError.UnauthorizedError()
       }
-
+       
       const checkedToken = await userService.chekResetToken(token)
 
       res.status(200).json(checkedToken)
@@ -90,7 +93,7 @@ class UsersController {
       if (!token) {
         throw ApiError.UnauthorizedError()
       } else if (!req.file) {
-        throw ApiError.BadRequest('Invalid file')
+        throw ApiError.BadRequest('Некоректний файл')
       }
       const skinPath = `/skins/${req.file.filename}`
 
@@ -108,7 +111,7 @@ class UsersController {
       if (!token) {
         throw ApiError.UnauthorizedError()
       } else if (!req.file) {
-        throw ApiError.BadRequest('Invalid file')
+        throw ApiError.BadRequest('Некоректний файл')
       }
       const avatarPath = `/avatars/${req.file.filename}`
 
@@ -121,16 +124,16 @@ class UsersController {
   }
   async changeCape(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log(1);
       const token = req.headers.authorization?.split(' ')[1]
 
       if (!token) {
         throw ApiError.UnauthorizedError()
       } else if (!req.file) {
-        throw ApiError.BadRequest('Invalid file')
+        throw ApiError.BadRequest('Некоректний файл')
       }
 
       const capePath = `/capes/${req.file.filename}`
-
       await userService.changeCape(capePath, token)
       res.status(200).json({ message: 'Success' })
     } catch (error) {
@@ -160,7 +163,7 @@ class UsersController {
       if (!token) {
         throw ApiError.UnauthorizedError()
       } else if (!newUsername) {
-        throw ApiError.BadRequest('Invalid username')
+        throw ApiError.BadRequest('Некоректний логін')
       }
 
       await userService.changeUsername(newUsername, token)
@@ -178,7 +181,7 @@ class UsersController {
       if (!token) {
         throw ApiError.UnauthorizedError()
       } else if (!newPassword || !currentPassword) {
-        throw ApiError.BadRequest('Invalid password')
+        throw ApiError.BadRequest('Некоректний пароль')
       }
 
       await userService.changePassword(newPassword, currentPassword, token)

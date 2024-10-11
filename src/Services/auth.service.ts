@@ -47,13 +47,13 @@ class AuthService {
       )
     )[0][0]
     if (!userSQL) {
-      throw ApiError.BadRequest('User is undefined')
+      throw ApiError.BadRequest('Користувач не знайден')
     }
     const user = new userDto(userSQL as UserSchema)
 
     const isPassEqual = bcrypt.compareSync(password, user.password)
     if (!isPassEqual) {
-      throw ApiError.BadRequest('Incorrect password')
+      throw ApiError.BadRequest('Некоректний пароль')
     }
 
     const tokens = tokensService.generateTokens({
@@ -92,9 +92,9 @@ class AuthService {
       )
     )[0][0]
     if (emailExist) {
-      throw ApiError.BadRequest('Email already exist')
+      throw ApiError.BadRequest('Email вже існує')
     } else if (usernameExist) {
-      throw ApiError.BadRequest('Username already exist')
+      throw ApiError.BadRequest('Логін вже існує')
     }
     return
   }

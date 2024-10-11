@@ -9,7 +9,7 @@ class AuthController {
       const errors = validationResult(req)
 
       if (!errors.isEmpty()) {
-        next(ApiError.BadRequest('Error in validation', errors.array()))
+        next(ApiError.BadRequest('Помилка у валідації', errors.array()))
       }
       const data = matchedData(req)
 
@@ -36,7 +36,7 @@ class AuthController {
       const errors = validationResult(req)
 
       if (!errors.isEmpty()) {
-        next(ApiError.BadRequest('Error in validation', errors.array()))
+        next(ApiError.BadRequest('Помилка у валідації', errors.array()))
       }
       const data = matchedData(req)
 

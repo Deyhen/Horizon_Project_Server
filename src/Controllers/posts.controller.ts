@@ -4,6 +4,7 @@ import postsService from '../Services/posts.service'
 class PostsController {
   async getPosts(req: Request, res: Response, next: NextFunction) {
     try {
+
       const posts = await postsService.getPosts()
 
       res.status(200).json(posts)

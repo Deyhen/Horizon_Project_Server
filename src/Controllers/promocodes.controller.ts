@@ -11,7 +11,7 @@ class PromocodesController {
           if (!token) {
             throw ApiError.UnauthorizedError()
           } else if (!promocode) {
-            throw ApiError.BadRequest('Invalid promocode')
+            throw ApiError.BadRequest('Некоректний промокод')
           }
     
           await promocodesService.activatePromocode(promocode, token)
@@ -26,7 +26,7 @@ class PromocodesController {
             if (req.body.user.role !== 'admin') {
                 throw ApiError.UnauthorizedError()
               } else if (!req.body.payload) {
-                throw ApiError.BadRequest('Invalid request')
+                throw ApiError.BadRequest('Некоректні даніі')
               }
               
             const { name, gameCurrencyBonus, donateCurrencyBonus, amount } = req.body.payload

@@ -32,7 +32,7 @@ class PromocodesService {
         )[0][0]
     
         if (!promocodeData) {
-          throw ApiError.BadRequest('Promocode does not exist')
+          throw ApiError.BadRequest('Промокод не існує')
         }
 
         await connection.query(
