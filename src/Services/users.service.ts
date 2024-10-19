@@ -4,8 +4,6 @@ import mailService from './mail.service'
 import { UserSchema } from '../Models/user.model'
 import { ApiError } from '../exceptions/api.error'
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import fs from 'fs'
-import path from 'path'
 import tokensService from './tokens.service'
 
 class UsersService {
@@ -73,7 +71,9 @@ class UsersService {
     )[0][0]
 
     if (!user) {
-      throw ApiError.BadRequest('Посилання некоректне або строк його дії вийшов')
+      throw ApiError.BadRequest(
+        'Посилання некоректне або строк його дії вийшов'
+      )
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 7)
@@ -106,15 +106,9 @@ class UsersService {
         id,
       ])
     )[0][0]
-    if (oldUser.skinPath) {
-      const filePath = path.join(process.cwd(), 'static', oldUser.skinPath)
 
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(`Error removing file: ${err}`)
-          return
-        }
-      })
+    if (oldUser.skinPath) {
+      return skinPath + '?t=' + new Date().getTime()
     }
 
     await connection.query('UPDATE users SET skinPath = ? WHERE id = ?', [
@@ -122,7 +116,7 @@ class UsersService {
       id,
     ])
 
-    return
+    return skinPath + '?t=' + new Date().getTime()
   }
   async changeAvatar(avatarPath: string, token: string) {
     const id = await tokensService.getIdByToken(token)
@@ -134,14 +128,7 @@ class UsersService {
     )[0][0]
 
     if (oldUser.avatarPath) {
-      const filePath = path.join(process.cwd(), 'static', oldUser.avatarPath)
-
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(`Error removing file: ${err}`)
-          return
-        }
-      })
+      return avatarPath + '?t=' + new Date().getTime()
     }
 
     await connection.query('UPDATE users SET avatarPath = ? WHERE id = ?', [
@@ -149,7 +136,7 @@ class UsersService {
       id,
     ])
 
-    return
+    return avatarPath + '?t=' + new Date().getTime()
   }
 
   async changeCape(capePath: string, token: string) {
@@ -162,20 +149,14 @@ class UsersService {
     )[0][0]
 
     if (oldUser.capePath) {
-      const filePath = path.join(process.cwd(), 'static', oldUser.capePath)
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error(`Error removing file: ${err}`)
-          return
-        }
-      })
+      return capePath + '?t=' + new Date().getTime()
     }
     await connection.query('UPDATE users SET capePath = ? WHERE id = ?', [
       capePath,
       id,
     ])
 
-    return
+    return capePath + '?t=' + new Date().getTime()
   }
   async activateEmail(token: string) {
     const id = await tokensService.getIdByToken(token)

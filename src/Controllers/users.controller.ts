@@ -14,7 +14,7 @@ class UsersController {
   }
   async getUser(req: Request, res: Response) {
     const token = req.headers.authorization?.split(' ')[1]
-    
+
     if (!token) {
       throw ApiError.UnauthorizedError()
     }
@@ -53,7 +53,6 @@ class UsersController {
     try {
       const { token, password } = req.body
 
-
       const username = await userService.resetPassword(token, password)
       const userData = await authService.login(username, password)
 
@@ -62,7 +61,7 @@ class UsersController {
         httpOnly: true,
         path: `${process.env.BACKEND_URL}/api/refresh`,
       })
-      
+
       res
         .status(200)
         .json({ accessToken: userData.tokens.accessToken, user: userData.user })
@@ -72,13 +71,12 @@ class UsersController {
   }
   async checkResetToken(req: Request, res: Response, next: NextFunction) {
     try {
-
       const token = req.params.token
 
       if (!token) {
         throw ApiError.UnauthorizedError()
       }
-       
+
       const checkedToken = await userService.chekResetToken(token)
 
       res.status(200).json(checkedToken)
@@ -97,9 +95,9 @@ class UsersController {
       }
       const skinPath = `/skins/${req.file.filename}`
 
-      await userService.changeSkin(skinPath, token)
+      const resSkinPath = await userService.changeSkin(skinPath, token)
 
-      res.status(200).json({ message: 'Success' })
+      res.status(200).json(resSkinPath)
     } catch (error) {
       next(error)
     }
@@ -113,11 +111,12 @@ class UsersController {
       } else if (!req.file) {
         throw ApiError.BadRequest('Некоректний файл')
       }
+
       const avatarPath = `/avatars/${req.file.filename}`
 
-      await userService.changeAvatar(avatarPath, token)
+      const resAvatarPath = await userService.changeAvatar(avatarPath, token)
 
-      res.status(200).json({ message: 'Success' })
+      res.status(200).json(resAvatarPath)
     } catch (error) {
       next(error)
     }
@@ -133,8 +132,8 @@ class UsersController {
       }
 
       const capePath = `/capes/${req.file.filename}`
-      await userService.changeCape(capePath, token)
-      res.status(200).json({ message: 'Success' })
+      const resCapePath = await userService.changeCape(capePath, token)
+      res.status(200).json(resCapePath)
     } catch (error) {
       next(error)
     }

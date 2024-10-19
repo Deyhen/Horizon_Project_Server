@@ -1,6 +1,6 @@
-import { ApiError } from '../exceptions/api.error'
 import { NextFunction, Request, Response } from 'express'
 import tokensService from '../Services/tokens.service'
+import { ApiError } from '../exceptions/api.error'
 
 export default async function (
   req: Request,
@@ -21,6 +21,7 @@ export default async function (
       return next(ApiError.UnauthorizedError())
     }
     req.body.user = userData
+
     next()
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {

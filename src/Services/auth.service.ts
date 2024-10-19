@@ -18,7 +18,7 @@ class AuthService {
 
     await connection.query(
       'INSERT INTO users (id, username, password, email, activatedPromocodes) VALUES (?, ?, ?, ?, ?)',
-      [id, username, hashedPassword, email,  JSON.stringify([])]
+      [id, username, hashedPassword, email, JSON.stringify([])]
     )
     const userSQL = (
       await connection.query<UserSchema[]>(

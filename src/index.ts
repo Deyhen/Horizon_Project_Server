@@ -58,7 +58,14 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.use('/api', usersRouter, postsRouter, serversRouter, authRouter, promocodesRouter)
+app.use(
+  '/api',
+  usersRouter,
+  postsRouter,
+  serversRouter,
+  authRouter,
+  promocodesRouter
+)
 
 app.use(errorHandlerMiddleware)
 
