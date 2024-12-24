@@ -12,6 +12,7 @@ class UsersController {
 
     res.status(200).json(users)
   }
+
   async getUser(req: Request, res: Response) {
     const token = req.headers.authorization?.split(' ')[1]
 

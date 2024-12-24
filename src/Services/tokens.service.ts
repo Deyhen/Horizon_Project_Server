@@ -11,6 +11,10 @@ dotenv.config()
 const AccessTokenKey = process.env.JWT_SECRET_ACCESS
 const RefreshTokenKey = process.env.JWT_SECRET_REFRESH
 
+if (!AccessTokenKey || !RefreshTokenKey) {
+  throw new Error('JWT secrets are not defined in environment variables')
+}
+
 class TokensService {
   generateTokens({ id, role }: { id: string; role: string }) {
     try {
@@ -37,65 +41,35 @@ class TokensService {
     userId: string
     refreshToken: string
   }) {
-    const tokenData = (
-      await connection.query<RefreshToken[]>(
-        'SELECT * FROM refreshSessions WHERE userId = ?',
-        [userId]
-      )
-    )[0][0]
-
-    if (tokenData) {
-      await connection.query(
-        'UPDATE refreshSessions SET refreshToken = ? WHERE userId = ?',
-        [refreshToken, userId]
-      )
-      const newToken = (
-        await connection.query(
-          'SELECT * FROM refreshSessions WHERE userId = ?',
-          [userId]
-        )
-      )[0]
-
-      return newToken
-    }
-
     const id = v4()
     await connection.query(
-      'INSERT INTO refreshSessions (id, userId, refreshToken) VALUES (?, ?, ?)',
-      [id, userId, refreshToken]
+      `INSERT INTO refreshSessions (id, userId, refreshToken)
+     VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE refreshToken = ?`,
+      [id, userId, refreshToken, refreshToken]
     )
-    const token = (
-      await connection.query('SELECT * FROM refreshSessions WHERE id = ?', [id])
-    )[0]
-
-    return token
+    return
   }
   async removeRefreshToken(refreshToken: string) {
-    connection.query('DELETE FROM refreshSessions WHERE refreshToken = ?', [
-      refreshToken,
-    ])
+    await connection.query(
+      'DELETE FROM refreshSessions WHERE refreshToken = ?',
+      [refreshToken]
+    )
   }
+  private validateToken(token: string, secret: string): UserFromToken | null {
+    try {
+      return jwt.verify(token, secret) as UserFromToken
+    } catch (error) {
+      return null
+    }
+  }
+
   async validateAccessToken(accessToken: string) {
-    try {
-      const userData = jwt.verify(
-        accessToken,
-        process.env.JWT_SECRET_ACCESS || ''
-      )
-      return userData as UserFromToken
-    } catch (error) {
-      return null
-    }
+    return this.validateToken(accessToken, AccessTokenKey!)
   }
+
   async validateRefreshToken(refreshToken: string) {
-    try {
-      const userData = jwt.verify(
-        refreshToken,
-        process.env.JWT_SECRET_REFRESH || ''
-      ) as UserFromToken
-      return userData as UserFromToken
-    } catch (error) {
-      return null
-    }
+    return this.validateToken(refreshToken, RefreshTokenKey!)
   }
   async findRefreshToken(refreshToken: string) {
     const tokenData = (

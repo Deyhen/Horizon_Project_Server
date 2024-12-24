@@ -9,7 +9,6 @@ export default function (
   next: NextFunction
 ) {
   if (error instanceof ApiError) {
-    console.log(error)
     return res
       .status(error.status)
       .json({ message: error.message, errors: error.errors })

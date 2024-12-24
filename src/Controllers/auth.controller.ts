@@ -7,7 +7,6 @@ class AuthController {
   async registration(req: Request, res: Response, next: NextFunction) {
     try {
       const errors = validationResult(req)
-
       if (!errors.isEmpty()) {
         next(ApiError.BadRequest('Помилка у валідації', errors.array()))
       }
@@ -25,7 +24,7 @@ class AuthController {
 
       res.status(200).json({
         accessToken: userData.tokens.accessToken,
-        user: userData.createdUser,
+        user: userData.user,
       })
     } catch (error) {
       next(error)
@@ -65,7 +64,6 @@ class AuthController {
       })
       res.status(200).json('Logout is success').end()
     } catch (error) {
-      console.log(error)
       next(error)
     }
   }

@@ -48,7 +48,6 @@ const mysqlConfig = {
   user: process.env.MYSQL_LOGIN,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DB_NAME,
-  insecureAuth: true,
 }
 
 export const connection = mysql.createPool(mysqlConfig)
