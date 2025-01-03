@@ -23,7 +23,7 @@ class TokensService {
         expiresIn: '15m',
       })
       const refreshToken = jwt.sign(payload, RefreshTokenKey as string, {
-        expiresIn: '30d',
+        expiresIn: '7d',
       })
       return {
         accessToken,
@@ -43,7 +43,7 @@ class TokensService {
   }) {
     const id = v4()
     await connection.query(
-      `INSERT INTO refreshSessions (id, userId, refreshToken)
+      `INSERT INTO refresh_sessions (id, userId, refreshToken)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE refreshToken = ?`,
       [id, userId, refreshToken, refreshToken]
@@ -52,7 +52,7 @@ class TokensService {
   }
   async removeRefreshToken(refreshToken: string) {
     await connection.query(
-      'DELETE FROM refreshSessions WHERE refreshToken = ?',
+      'DELETE FROM refresh_sessions WHERE refreshToken = ?',
       [refreshToken]
     )
   }
@@ -74,7 +74,7 @@ class TokensService {
   async findRefreshToken(refreshToken: string) {
     const tokenData = (
       await connection.query(
-        'SELECT * FROM refreshSessions WHERE refreshToken = ?',
+        'SELECT * FROM refresh_sessions WHERE refreshToken = ?',
         [refreshToken]
       )
     )[0]

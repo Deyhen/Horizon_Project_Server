@@ -80,8 +80,8 @@ class AuthService {
       usersService.getUserByField('email', email),
       usersService.getUserByField('username', username),
     ])
-    if (emailExist) throw ApiError.BadRequest('')
-    if (usernameExist) throw ApiError.BadRequest('')
+    if (emailExist) throw ApiError.BadRequest('Email exists')
+    if (usernameExist) throw ApiError.BadRequest('Username exists')
     return
   }
 

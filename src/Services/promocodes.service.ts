@@ -3,6 +3,7 @@ import { connection } from '..'
 import { ApiError } from '../exceptions/api.error'
 import { PromocodeSchema, UserSchema } from '../Models/user.model'
 import tokensService from './tokens.service'
+import usersService from './users.service'
 
 class PromocodesService {
   async activatePromocode(promocode: string, token: string) {
@@ -11,19 +12,17 @@ class PromocodesService {
     if (!id) {
       throw ApiError.UnauthorizedError()
     }
-    const user = (
-      await connection.query<UserSchema[]>('SELECT * FROM users WHERE id = ?', [
-        id,
-      ])
-    )[0][0]
+    const user = await usersService.getUserByField('id', id)
 
-    user.activatedPromocodes.map((item) => {
-      const parsedItem = JSON.parse(item)
+    const activatedPromocodes: string[] = JSON.parse(user.activatedPromocodes)
 
-      if (parsedItem.name === promocode) {
+    activatedPromocodes.map((item: string) => {
+      const parsedPromocode: PromocodeSchema = JSON.parse(item)
+      if (parsedPromocode.name === promocode) {
         throw ApiError.BadRequest('Ви вже використовували цей промокод')
       }
     })
+
     const promocodeData = (
       await connection.query<PromocodeSchema[]>(
         'SELECT * FROM promocodes WHERE name = ?',
